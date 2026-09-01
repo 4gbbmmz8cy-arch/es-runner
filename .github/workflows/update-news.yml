@@ -4,9 +4,19 @@ on:
   schedule:
     - cron: '20 */2 * * *'
   workflow_dispatch:
+    inputs:
+      sync_all_d1:
+        description: 'Sync all stories to D1 instead of only changed stories'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
+
+concurrency:
+  group: feed-refresh
+  cancel-in-progress: false
 
 jobs:
   update-feed:
@@ -113,6 +123,7 @@ jobs:
           echo "D1_BASE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           node scripts/update-news.mjs
 
+
       - name: Ensure page branding and analytics
         run: |
           node scripts/add-favicon.mjs
@@ -167,14 +178,22 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Generate D1 delta SQL
-        run: node scripts/generate-d1-compact-sql.mjs --since "$D1_BASE_SHA"
+      - name: Generate D1 SQL
+        shell: bash
+        run: |
+          if [[ "${{ inputs.sync_all_d1 }}" == "true" ]]; then
+            echo "Generating a full D1 sync"
+            node scripts/generate-d1-compact-sql.mjs --all
+          else
+            echo "Generating a D1 delta since $D1_BASE_SHA"
+            node scripts/generate-d1-compact-sql.mjs --since "$D1_BASE_SHA"
+          fi
 
       - name: Show generated SQL files
         run: |
           shopt -s nullglob
           files=(generated/stories-*.sql)
-          echo "Generated ${#files[@]} D1 delta chunk(s)"
+          echo "Generated ${#files[@]} D1 chunk(s)"
           ((${#files[@]} == 0)) || ls -lh "${files[@]}"
 
       - name: Upload changed stories to D1
