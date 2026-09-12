@@ -41,8 +41,14 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_D1_DATABASE_ID: ee9c5c9b-0790-49d9-8e3f-01ee9f33b78c
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - name: Checkout private ES repository
+        uses: actions/checkout@v6
+        with:
+          repository: clay-36/clay-36.github.io
+          ref: main
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: true
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
