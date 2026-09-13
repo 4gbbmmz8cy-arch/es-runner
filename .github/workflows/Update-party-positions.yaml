@@ -41,6 +41,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_D1_DATABASE_ID: ee9c5c9b-0790-49d9-8e3f-01ee9f33b78c
+      X_SESSION_COOKIES: ${{secrets.X_SESSION_COOKIES}}
     steps:
       - name: Checkout private ES repository
         uses: actions/checkout@v6
